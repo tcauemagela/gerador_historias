@@ -52,6 +52,7 @@ class StoryController:
             objetivos = form_data["objetivos"]
             complexidade = form_data["complexidade"]
             criterios_aceitacao = form_data["criterios_aceitacao"]
+            api_specs = form_data.get("api_specs", None)
 
             # Chamar AI Service para gerar história
             historia_gerada = self.ai_service.generate_story(
@@ -60,7 +61,8 @@ class StoryController:
                 apis_servicos=apis_servicos,
                 objetivos=objetivos,
                 complexidade=complexidade,
-                criterios_aceitacao=criterios_aceitacao
+                criterios_aceitacao=criterios_aceitacao,
+                api_specs=api_specs
             )
 
             # Criar objeto Story
@@ -89,13 +91,17 @@ class StoryController:
             return None, "connection"
 
         except Exception as e:
+            # Importar traceback para debug detalhado
+            import traceback
+
             # Verifica se é erro de API key
             error_str = str(e).lower()
             if "api key" in error_str or "authentication" in error_str or "unauthorized" in error_str:
                 return None, "api_key"
 
-            # Erro genérico
-            return None, "generic"
+            # Erro genérico - retorna detalhes completos para debug
+            error_details = f"{type(e).__name__}: {str(e)}\n\nStack Trace:\n{traceback.format_exc()}"
+            return None, f"generic:{error_details}"
 
     def validate_story_data(self, form_data: Dict[str, Any]) -> tuple[bool, list[str]]:
         """

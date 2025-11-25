@@ -173,7 +173,18 @@ def show_error(error_message: str, error_type: str = "generic"):
         st.info("💡 **Sugestão:** Verifique a configuração da API key no arquivo .env ou Streamlit Secrets.")
 
     else:
-        st.warning(f"**Detalhes técnicos:** {error_message}")
+        # Se for erro genérico com detalhes (formato "generic:detalhes")
+        if error_type.startswith("generic:"):
+            error_details = error_type.replace("generic:", "")
+            st.error("**Erro Desconhecido:** Ocorreu um erro inesperado ao gerar a história.")
+
+            # Mostrar detalhes em um expander para não poluir a tela
+            with st.expander("🔍 Detalhes Técnicos (Debug)", expanded=True):
+                st.code(error_details, language="python")
+
+            st.info("💡 **Ação sugerida:** Copie os detalhes acima e compartilhe com o desenvolvedor para análise.")
+        else:
+            st.warning(f"**Detalhes técnicos:** {error_message}")
 
     # Sempre oferecer botão de retry
     if st.button("🔄 Tentar Novamente", type="secondary"):

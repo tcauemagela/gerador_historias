@@ -183,9 +183,42 @@ def initialize_app():
             margin: 1rem 0;
         }
 
-        /* Override Streamlit defaults - FORÇAR BRANCO */
-        .stMarkdown, .stText, p, span, div {
+        /* Override Streamlit defaults - Cores específicas */
+        /* Labels e títulos em branco */
+        .stTextInput label, .stTextArea label, .stSelectbox label, .stNumberInput label {
             color: #FFFFFF !important;
+            font-weight: 500;
+        }
+
+        /* Conteúdo de markdown da história - BRANCO */
+        .stMarkdown p, .stMarkdown li, .stMarkdown span {
+            color: #FFFFFF !important;
+        }
+
+        /* Cabeçalhos do markdown em branco */
+        .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4, .stMarkdown h5, .stMarkdown h6 {
+            color: #FFFFFF !important;
+        }
+
+        /* Blocos de código inline */
+        .stMarkdown code {
+            color: #10B981 !important;  /* Verde claro */
+            background-color: #1E293B !important;  /* Fundo escuro */
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        /* Blocos de código pre-formatado (como JSON) */
+        .stMarkdown pre {
+            background-color: #1E293B !important;  /* Fundo escuro */
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .stMarkdown pre code {
+            color: #10B981 !important;  /* Verde claro para código */
+            background-color: transparent !important;
         }
 
         /* Selectbox dropdown text */
@@ -198,9 +231,16 @@ def initialize_app():
             color: #B0B0B0 !important;
         }
 
-        /* Caption text */
-        .caption {
-            color: #E0E0E0 !important;
+        /* Caption text - verde claro para visibilidade */
+        .stCaptionContainer, [data-testid="stCaptionContainer"],
+        .st-emotion-cache-1n76uvr, .st-emotion-cache-1y4p8pa,
+        [class*="caption"] {
+            color: #A0D9B4 !important;
+        }
+
+        /* Força caption (small) do streamlit */
+        small {
+            color: #A0D9B4 !important;
         }
 
         /* Text inputs */
@@ -260,13 +300,7 @@ def initialize_app():
             outline: none;
         }
 
-        /* Label text - mais branco */
-        .stTextInput label, .stTextArea label, .stSelectbox label, .stNumberInput label {
-            color: #FFFFFF !important;
-            font-weight: 500;
-        }
-
-        /* Info boxes text */
+        /* Info boxes text - verde claro para visibilidade */
         .stAlert p, .stInfo p, .stWarning p {
             color: #FFFFFF !important;
         }
@@ -286,6 +320,27 @@ def initialize_app():
         /* Info/Warning/Success boxes */
         .stAlert {
             border-radius: 12px;
+        }
+
+        /* Texto geral em containers - verde claro para boa visibilidade */
+        [data-testid="stVerticalBlock"] > div > div > p,
+        [data-testid="stVerticalBlock"] > div > div > span {
+            color: #A7F3D0 !important;
+        }
+
+        /* Checkboxes e outros componentes interativos */
+        .stCheckbox label {
+            color: #D1FAE5 !important;
+        }
+
+        /* Success/Info/Warning messages */
+        .stSuccess, .stInfo, .stWarning {
+            color: #FFFFFF !important;
+        }
+
+        /* Texto dentro de colunas */
+        [data-testid="column"] p, [data-testid="column"] span {
+            color: #A7F3D0 !important;
         }
         </style>
         """, unsafe_allow_html=True)

@@ -39,20 +39,23 @@ def initialize_session_state():
     if 'is_api' not in st.session_state:
         st.session_state.is_api = False
 
+    if 'api_metodo' not in st.session_state:
+        st.session_state.api_metodo = "GET"
+
     if 'api_endpoint' not in st.session_state:
         st.session_state.api_endpoint = ""
 
-    if 'api_parametros' not in st.session_state:
-        st.session_state.api_parametros = ""
+    if 'api_query_params' not in st.session_state:
+        st.session_state.api_query_params = ""
+
+    if 'api_path_param' not in st.session_state:
+        st.session_state.api_path_param = ""
+
+    if 'api_body' not in st.session_state:
+        st.session_state.api_body = ""
 
     if 'api_formato_resposta' not in st.session_state:
         st.session_state.api_formato_resposta = ""
-
-    if 'api_tratamento_erros' not in st.session_state:
-        st.session_state.api_tratamento_erros = ""
-
-    if 'api_documentacao' not in st.session_state:
-        st.session_state.api_documentacao = ""
 
     # Subseções de Objetivos
     if 'objetivo_como' not in st.session_state:
@@ -63,18 +66,6 @@ def initialize_session_state():
 
     if 'objetivo_para_que' not in st.session_state:
         st.session_state.objetivo_para_que = ""
-
-    if 'objetivo_listagem_medicos' not in st.session_state:
-        st.session_state.objetivo_listagem_medicos = ""
-
-    if 'objetivo_filtros_busca' not in st.session_state:
-        st.session_state.objetivo_filtros_busca = ""
-
-    if 'objetivo_exibicao_horarios' not in st.session_state:
-        st.session_state.objetivo_exibicao_horarios = ""
-
-    if 'objetivo_agendamento' not in st.session_state:
-        st.session_state.objetivo_agendamento = ""
 
 
 def render_multiple_text_areas(
@@ -265,90 +256,6 @@ def render_form() -> Dict[str, Any]:
         height=80,
         key="obj_para_que"
     )
-
-    # Subseção: Listagem de Médicos
-    st.markdown("""
-        <div style="
-            background-color: rgba(139, 92, 246, 0.08);
-            border-left: 3px solid #8B5CF6;
-            padding: 0.5rem 0.75rem;
-            border-radius: 6px;
-            margin-bottom: 0.5rem;
-        ">
-            <strong style="color: #E0E0E0; font-size: 0.95rem;">Listagem de Médicos:</strong>
-        </div>
-    """, unsafe_allow_html=True)
-    st.session_state.objetivo_listagem_medicos = st.text_area(
-        "Listagem de Médicos",
-        value=st.session_state.objetivo_listagem_medicos,
-        placeholder="Descreva requisitos para listagem de médicos...",
-        label_visibility="collapsed",
-        height=80,
-        key="obj_listagem"
-    )
-
-    # Subseção: Filtros de Busca
-    st.markdown("""
-        <div style="
-            background-color: rgba(139, 92, 246, 0.08);
-            border-left: 3px solid #8B5CF6;
-            padding: 0.5rem 0.75rem;
-            border-radius: 6px;
-            margin-bottom: 0.5rem;
-        ">
-            <strong style="color: #E0E0E0; font-size: 0.95rem;">Filtros de Busca:</strong>
-        </div>
-    """, unsafe_allow_html=True)
-    st.session_state.objetivo_filtros_busca = st.text_area(
-        "Filtros de Busca",
-        value=st.session_state.objetivo_filtros_busca,
-        placeholder="Descreva filtros de busca necessários...",
-        label_visibility="collapsed",
-        height=80,
-        key="obj_filtros"
-    )
-
-    # Subseção: Exibição de Horários
-    st.markdown("""
-        <div style="
-            background-color: rgba(139, 92, 246, 0.08);
-            border-left: 3px solid #8B5CF6;
-            padding: 0.5rem 0.75rem;
-            border-radius: 6px;
-            margin-bottom: 0.5rem;
-        ">
-            <strong style="color: #E0E0E0; font-size: 0.95rem;">Exibição de Horários:</strong>
-        </div>
-    """, unsafe_allow_html=True)
-    st.session_state.objetivo_exibicao_horarios = st.text_area(
-        "Exibição de Horários",
-        value=st.session_state.objetivo_exibicao_horarios,
-        placeholder="Descreva como os horários devem ser exibidos...",
-        label_visibility="collapsed",
-        height=80,
-        key="obj_horarios"
-    )
-
-    # Subseção: Agendamento
-    st.markdown("""
-        <div style="
-            background-color: rgba(139, 92, 246, 0.08);
-            border-left: 3px solid #8B5CF6;
-            padding: 0.5rem 0.75rem;
-            border-radius: 6px;
-            margin-bottom: 0.5rem;
-        ">
-            <strong style="color: #E0E0E0; font-size: 0.95rem;">Agendamento:</strong>
-        </div>
-    """, unsafe_allow_html=True)
-    st.session_state.objetivo_agendamento = st.text_area(
-        "Agendamento",
-        value=st.session_state.objetivo_agendamento,
-        placeholder="Descreva requisitos para agendamento...",
-        label_visibility="collapsed",
-        height=80,
-        key="obj_agendamento"
-    )
     st.markdown("---")
 
     # Campo 5: Complexidade (único)
@@ -408,7 +315,28 @@ def render_form() -> Dict[str, Any]:
     if st.session_state.is_api:
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # Endpoint da API
+        # Seleção de Método HTTP
+        st.markdown("""
+            <div style="
+                background-color: rgba(139, 92, 246, 0.08);
+                border-left: 3px solid #8B5CF6;
+                padding: 0.5rem 0.75rem;
+                border-radius: 6px;
+                margin-bottom: 0.5rem;
+            ">
+                <strong style="color: #E0E0E0; font-size: 0.95rem;">Método HTTP</strong>
+            </div>
+        """, unsafe_allow_html=True)
+        st.session_state.api_metodo = st.selectbox(
+            "Método",
+            options=["GET", "POST", "PUT", "PATCH", "DELETE"],
+            index=["GET", "POST", "PUT", "PATCH", "DELETE"].index(st.session_state.api_metodo),
+            label_visibility="collapsed",
+            key="api_metodo_select"
+        )
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # Endpoint da API (sempre mostra)
         st.markdown("""
             <div style="
                 background-color: rgba(139, 92, 246, 0.08);
@@ -420,38 +348,194 @@ def render_form() -> Dict[str, Any]:
                 <strong style="color: #E0E0E0; font-size: 0.95rem;">Endpoint da API</strong>
             </div>
         """, unsafe_allow_html=True)
+
+        # Placeholder dinâmico baseado no método
+        endpoint_placeholders = {
+            "GET": "Ex: /api/v1/usuarios",
+            "POST": "Ex: /api/v1/usuarios",
+            "PUT": "Ex: /api/v1/usuarios/{id}",
+            "PATCH": "Ex: /api/v1/usuarios/{id}",
+            "DELETE": "Ex: /api/v1/usuarios/{id}"
+        }
+
         st.session_state.api_endpoint = st.text_input(
             "Endpoint",
             value=st.session_state.api_endpoint,
-            placeholder="Ex: /api/v1/districts",
+            placeholder=endpoint_placeholders.get(st.session_state.api_metodo, "Ex: /api/v1/recurso"),
             label_visibility="collapsed",
             key="api_endpoint_input"
         )
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # Parâmetros de Consulta
-        st.markdown("""
-            <div style="
-                background-color: rgba(139, 92, 246, 0.08);
-                border-left: 3px solid #8B5CF6;
-                padding: 0.5rem 0.75rem;
-                border-radius: 6px;
-                margin-bottom: 0.5rem;
-            ">
-                <strong style="color: #E0E0E0; font-size: 0.95rem;">Parâmetros de Consulta</strong>
-            </div>
-        """, unsafe_allow_html=True)
-        st.session_state.api_parametros = st.text_area(
-            "Parâmetros",
-            value=st.session_state.api_parametros,
-            placeholder="Ex: city_id (obrigatório), limit (opcional), offset (opcional)",
-            label_visibility="collapsed",
-            height=100,
-            key="api_parametros_input"
-        )
-        st.markdown("<br>", unsafe_allow_html=True)
+        # Campos dinâmicos baseados no método HTTP
+        metodo = st.session_state.api_metodo
 
-        # Formato da Resposta
+        # GET: Parâmetros de Consulta (Query Params)
+        if metodo == "GET":
+            st.markdown("""
+                <div style="
+                    background-color: rgba(139, 92, 246, 0.08);
+                    border-left: 3px solid #8B5CF6;
+                    padding: 0.5rem 0.75rem;
+                    border-radius: 6px;
+                    margin-bottom: 0.5rem;
+                ">
+                    <strong style="color: #E0E0E0; font-size: 0.95rem;">Parâmetros de Consulta (Query Params)</strong>
+                </div>
+            """, unsafe_allow_html=True)
+            st.caption("Filtros, paginação e ordenação passados na URL")
+            st.session_state.api_query_params = st.text_area(
+                "Query Params",
+                value=st.session_state.api_query_params,
+                placeholder="Ex: status=ativo&limit=10&page=1",
+                label_visibility="collapsed",
+                height=100,
+                key="api_query_params_input"
+            )
+            st.markdown("<br>", unsafe_allow_html=True)
+
+        # POST: Corpo da Requisição (Body)
+        elif metodo == "POST":
+            st.markdown("""
+                <div style="
+                    background-color: rgba(139, 92, 246, 0.08);
+                    border-left: 3px solid #8B5CF6;
+                    padding: 0.5rem 0.75rem;
+                    border-radius: 6px;
+                    margin-bottom: 0.5rem;
+                ">
+                    <strong style="color: #E0E0E0; font-size: 0.95rem;">Corpo da Requisição (Body)</strong>
+                </div>
+            """, unsafe_allow_html=True)
+            st.caption("Objeto JSON com os dados que serão enviados para criação")
+            st.session_state.api_body = st.text_area(
+                "Body",
+                value=st.session_state.api_body,
+                placeholder='Ex: {\n  "nome": "João",\n  "email": "joao@email.com"\n}',
+                label_visibility="collapsed",
+                height=120,
+                key="api_body_input"
+            )
+            st.markdown("<br>", unsafe_allow_html=True)
+
+        # PUT: Parâmetro de Rota + Corpo da Requisição
+        elif metodo == "PUT":
+            # Parâmetro de Rota
+            st.markdown("""
+                <div style="
+                    background-color: rgba(139, 92, 246, 0.08);
+                    border-left: 3px solid #8B5CF6;
+                    padding: 0.5rem 0.75rem;
+                    border-radius: 6px;
+                    margin-bottom: 0.5rem;
+                ">
+                    <strong style="color: #E0E0E0; font-size: 0.95rem;">Parâmetro de Rota (Path Param)</strong>
+                </div>
+            """, unsafe_allow_html=True)
+            st.caption("Identificador do recurso a ser substituído")
+            st.session_state.api_path_param = st.text_input(
+                "Path Param",
+                value=st.session_state.api_path_param,
+                placeholder="Ex: id (UUID ou número)",
+                label_visibility="collapsed",
+                key="api_path_param_input"
+            )
+            st.markdown("<br>", unsafe_allow_html=True)
+
+            # Corpo da Requisição
+            st.markdown("""
+                <div style="
+                    background-color: rgba(139, 92, 246, 0.08);
+                    border-left: 3px solid #8B5CF6;
+                    padding: 0.5rem 0.75rem;
+                    border-radius: 6px;
+                    margin-bottom: 0.5rem;
+                ">
+                    <strong style="color: #E0E0E0; font-size: 0.95rem;">Corpo da Requisição (Body)</strong>
+                </div>
+            """, unsafe_allow_html=True)
+            st.caption("Objeto JSON completo que substituirá o recurso existente")
+            st.session_state.api_body = st.text_area(
+                "Body",
+                value=st.session_state.api_body,
+                placeholder='Ex: {\n  "nome": "João Silva",\n  "email": "joao@email.com",\n  "status": "ativo"\n}',
+                label_visibility="collapsed",
+                height=120,
+                key="api_body_input"
+            )
+            st.markdown("<br>", unsafe_allow_html=True)
+
+        # PATCH: Parâmetro de Rota + Corpo da Requisição (parcial)
+        elif metodo == "PATCH":
+            # Parâmetro de Rota
+            st.markdown("""
+                <div style="
+                    background-color: rgba(139, 92, 246, 0.08);
+                    border-left: 3px solid #8B5CF6;
+                    padding: 0.5rem 0.75rem;
+                    border-radius: 6px;
+                    margin-bottom: 0.5rem;
+                ">
+                    <strong style="color: #E0E0E0; font-size: 0.95rem;">Parâmetro de Rota (Path Param)</strong>
+                </div>
+            """, unsafe_allow_html=True)
+            st.caption("Identificador do recurso a ser alterado")
+            st.session_state.api_path_param = st.text_input(
+                "Path Param",
+                value=st.session_state.api_path_param,
+                placeholder="Ex: id (UUID ou número)",
+                label_visibility="collapsed",
+                key="api_path_param_input"
+            )
+            st.markdown("<br>", unsafe_allow_html=True)
+
+            # Corpo da Requisição
+            st.markdown("""
+                <div style="
+                    background-color: rgba(139, 92, 246, 0.08);
+                    border-left: 3px solid #8B5CF6;
+                    padding: 0.5rem 0.75rem;
+                    border-radius: 6px;
+                    margin-bottom: 0.5rem;
+                ">
+                    <strong style="color: #E0E0E0; font-size: 0.95rem;">Corpo da Requisição (Body)</strong>
+                </div>
+            """, unsafe_allow_html=True)
+            st.caption("Objeto JSON contendo apenas os campos que serão modificados")
+            st.session_state.api_body = st.text_area(
+                "Body",
+                value=st.session_state.api_body,
+                placeholder='Ex: {\n  "status": "inativo"\n}',
+                label_visibility="collapsed",
+                height=100,
+                key="api_body_input"
+            )
+            st.markdown("<br>", unsafe_allow_html=True)
+
+        # DELETE: Parâmetro de Rota
+        elif metodo == "DELETE":
+            st.markdown("""
+                <div style="
+                    background-color: rgba(139, 92, 246, 0.08);
+                    border-left: 3px solid #8B5CF6;
+                    padding: 0.5rem 0.75rem;
+                    border-radius: 6px;
+                    margin-bottom: 0.5rem;
+                ">
+                    <strong style="color: #E0E0E0; font-size: 0.95rem;">Parâmetro de Rota (Path Param)</strong>
+                </div>
+            """, unsafe_allow_html=True)
+            st.caption("Identificador do recurso a ser excluído")
+            st.session_state.api_path_param = st.text_input(
+                "Path Param",
+                value=st.session_state.api_path_param,
+                placeholder="Ex: id (UUID ou número)",
+                label_visibility="collapsed",
+                key="api_path_param_input"
+            )
+            st.markdown("<br>", unsafe_allow_html=True)
+
+        # Formato da Resposta (sempre mostra)
         st.markdown("""
             <div style="
                 background-color: rgba(139, 92, 246, 0.08);
@@ -467,54 +551,10 @@ def render_form() -> Dict[str, Any]:
         st.session_state.api_formato_resposta = st.text_area(
             "Formato Resposta",
             value=st.session_state.api_formato_resposta,
-            placeholder='Ex: {\n  "districts": [...],\n  "total": 10,\n  "page": 1\n}',
+            placeholder='Ex: {\n  "sucesso": true,\n  "mensagem": "Operação realizada com sucesso"\n}',
             label_visibility="collapsed",
-            height=150,
+            height=120,
             key="api_formato_input"
-        )
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        # Tratamento de Erros
-        st.markdown("""
-            <div style="
-                background-color: rgba(139, 92, 246, 0.08);
-                border-left: 3px solid #8B5CF6;
-                padding: 0.5rem 0.75rem;
-                border-radius: 6px;
-                margin-bottom: 0.5rem;
-            ">
-                <strong style="color: #E0E0E0; font-size: 0.95rem;">Tratamento de Erros</strong>
-            </div>
-        """, unsafe_allow_html=True)
-        st.session_state.api_tratamento_erros = st.text_area(
-            "Tratamento Erros",
-            value=st.session_state.api_tratamento_erros,
-            placeholder="Ex: 400 - Parâmetros inválidos\n404 - Recurso não encontrado\n500 - Erro interno do servidor",
-            label_visibility="collapsed",
-            height=100,
-            key="api_erros_input"
-        )
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        # Documentação
-        st.markdown("""
-            <div style="
-                background-color: rgba(139, 92, 246, 0.08);
-                border-left: 3px solid #8B5CF6;
-                padding: 0.5rem 0.75rem;
-                border-radius: 6px;
-                margin-bottom: 0.5rem;
-            ">
-                <strong style="color: #E0E0E0; font-size: 0.95rem;">Documentação</strong>
-            </div>
-        """, unsafe_allow_html=True)
-        st.session_state.api_documentacao = st.text_area(
-            "Documentação",
-            value=st.session_state.api_documentacao,
-            placeholder="Descreva requisitos de documentação (Swagger, OpenAPI, etc.)",
-            label_visibility="collapsed",
-            height=100,
-            key="api_doc_input"
         )
 
     st.markdown("---")
@@ -557,11 +597,7 @@ def render_form() -> Dict[str, Any]:
             objetivos_dict = {
                 "como": st.session_state.objetivo_como.strip(),
                 "quero": st.session_state.objetivo_quero.strip(),
-                "para_que": st.session_state.objetivo_para_que.strip(),
-                "listagem_medicos": st.session_state.objetivo_listagem_medicos.strip(),
-                "filtros_busca": st.session_state.objetivo_filtros_busca.strip(),
-                "exibicao_horarios": st.session_state.objetivo_exibicao_horarios.strip(),
-                "agendamento": st.session_state.objetivo_agendamento.strip()
+                "para_que": st.session_state.objetivo_para_que.strip()
             }
 
             form_data = {
@@ -576,13 +612,26 @@ def render_form() -> Dict[str, Any]:
 
             # Adicionar dados da API se aplicável
             if st.session_state.is_api:
-                form_data["api_specs"] = {
+                api_specs = {
+                    "metodo": st.session_state.api_metodo,
                     "endpoint": st.session_state.api_endpoint.strip(),
-                    "parametros": st.session_state.api_parametros.strip(),
-                    "formato_resposta": st.session_state.api_formato_resposta.strip(),
-                    "tratamento_erros": st.session_state.api_tratamento_erros.strip(),
-                    "documentacao": st.session_state.api_documentacao.strip()
+                    "formato_resposta": st.session_state.api_formato_resposta.strip()
                 }
+
+                # Adicionar campos específicos baseados no método HTTP
+                metodo = st.session_state.api_metodo
+
+                if metodo == "GET":
+                    api_specs["query_params"] = st.session_state.api_query_params.strip()
+                elif metodo == "POST":
+                    api_specs["body"] = st.session_state.api_body.strip()
+                elif metodo in ["PUT", "PATCH"]:
+                    api_specs["path_param"] = st.session_state.api_path_param.strip()
+                    api_specs["body"] = st.session_state.api_body.strip()
+                elif metodo == "DELETE":
+                    api_specs["path_param"] = st.session_state.api_path_param.strip()
+
+                form_data["api_specs"] = api_specs
 
             return form_data
 
@@ -605,15 +654,12 @@ def reset_form():
     st.session_state.objetivo_como = ""
     st.session_state.objetivo_quero = ""
     st.session_state.objetivo_para_que = ""
-    st.session_state.objetivo_listagem_medicos = ""
-    st.session_state.objetivo_filtros_busca = ""
-    st.session_state.objetivo_exibicao_horarios = ""
-    st.session_state.objetivo_agendamento = ""
 
     # Resetar campos da API
     st.session_state.is_api = False
+    st.session_state.api_metodo = "GET"
     st.session_state.api_endpoint = ""
-    st.session_state.api_parametros = ""
+    st.session_state.api_query_params = ""
+    st.session_state.api_path_param = ""
+    st.session_state.api_body = ""
     st.session_state.api_formato_resposta = ""
-    st.session_state.api_tratamento_erros = ""
-    st.session_state.api_documentacao = ""

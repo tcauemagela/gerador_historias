@@ -34,7 +34,8 @@ class AIService:
         apis_servicos: List[str],
         objetivos: Dict[str, Any],
         complexidade: int,
-        criterios_aceitacao: List[str]
+        criterios_aceitacao: List[str],
+        api_specs: Dict[str, str] = None
     ) -> str:
         """
         Gera história técnica usando Claude API.
@@ -46,6 +47,7 @@ class AIService:
             objetivos: Dicionário de objetivos com subseções
             complexidade: Pontos de complexidade (1-21)
             criterios_aceitacao: Lista de critérios de aceitação
+            api_specs: Especificações da API (endpoint, parâmetros, etc.)
 
         Returns:
             História gerada em formato Markdown
@@ -62,7 +64,8 @@ class AIService:
             apis_servicos=apis_servicos,
             objetivos=objetivos,
             complexidade=complexidade,
-            criterios_aceitacao=criterios_aceitacao
+            criterios_aceitacao=criterios_aceitacao,
+            api_specs=api_specs
         )
 
         try:
@@ -106,7 +109,8 @@ class AIService:
         apis_servicos: List[str],
         objetivos: Dict[str, Any],
         complexidade: int,
-        criterios_aceitacao: List[str]
+        criterios_aceitacao: List[str],
+        api_specs: Dict[str, str] = None
     ) -> str:
         """
         Constrói prompt estruturado profissional para Claude API.
@@ -119,6 +123,7 @@ class AIService:
             objetivos: Dicionário de objetivos com subseções
             complexidade: Pontos de complexidade
             criterios_aceitacao: Lista de critérios
+            api_specs: Especificações da API
 
         Returns:
             Prompt formatado em XML
@@ -137,11 +142,7 @@ class AIService:
         labels = {
             "como": "Como",
             "quero": "Quero",
-            "para_que": "Para que",
-            "listagem_medicos": "Listagem de Médicos",
-            "filtros_busca": "Filtros de Busca",
-            "exibicao_horarios": "Exibição de Horários",
-            "agendamento": "Agendamento"
+            "para_que": "Para que"
         }
 
         for key, value in objetivos.items():
@@ -151,6 +152,41 @@ class AIService:
 
         objetivos_formatados = "\n".join(f"- {obj}" for obj in objetivos_lista) if objetivos_lista else "- Não especificado"
         criterios_formatados = "\n".join(f"- {crit}" for crit in criterios_aceitacao)
+
+        # Formatar especificações da API se fornecidas
+        api_specs_formatado = ""
+        if api_specs and isinstance(api_specs, dict):
+            specs_parts = []
+
+            # Método HTTP (sempre presente)
+            if api_specs.get('metodo'):
+                specs_parts.append(f"Método HTTP: {api_specs['metodo']}")
+
+            # Endpoint (sempre presente)
+            if api_specs.get('endpoint'):
+                specs_parts.append(f"Endpoint: {api_specs['endpoint']}")
+
+            # Campos específicos baseados no método
+            metodo = api_specs.get('metodo', '')
+
+            if metodo == 'GET' and api_specs.get('query_params'):
+                specs_parts.append(f"Parâmetros de Consulta (Query Params): {api_specs['query_params']}")
+            elif metodo == 'POST' and api_specs.get('body'):
+                specs_parts.append(f"Corpo da Requisição (Body): {api_specs['body']}")
+            elif metodo in ['PUT', 'PATCH']:
+                if api_specs.get('path_param'):
+                    specs_parts.append(f"Parâmetro de Rota (Path Param): {api_specs['path_param']}")
+                if api_specs.get('body'):
+                    specs_parts.append(f"Corpo da Requisição (Body): {api_specs['body']}")
+            elif metodo == 'DELETE' and api_specs.get('path_param'):
+                specs_parts.append(f"Parâmetro de Rota (Path Param): {api_specs['path_param']}")
+
+            # Formato de resposta (sempre presente)
+            if api_specs.get('formato_resposta'):
+                specs_parts.append(f"Formato de Resposta: {api_specs['formato_resposta']}")
+
+            if specs_parts:
+                api_specs_formatado = "\n".join(f"- {spec}" for spec in specs_parts)
 
         prompt = f"""
 <task>
@@ -173,6 +209,7 @@ REGRAS ABSOLUTAS (NUNCA VIOLAR):
    - Não adicionar regras de negócio não fornecidas
    - Se algo não foi informado, não especular
    - Mantenha-se fiel aos inputs fornecidos
+   - SEMPRE incluir especificações de API quando fornecidas (endpoint, parâmetros, formato, erros, documentação)
 
 3. SER OBJETIVA E DIRETA
    - Evitar floreios ou descrições elaboradas
@@ -207,6 +244,10 @@ REGRAS ABSOLUTAS (NUNCA VIOLAR):
 <criterios_aceitacao>
 {criterios_formatados}
 </criterios_aceitacao>
+{f'''
+<especificacoes_api>
+{api_specs_formatado}
+</especificacoes_api>''' if api_specs_formatado else ''}
 </input_data>
 
 <mandatory_structure>
@@ -232,6 +273,19 @@ SUA HISTÓRIA DEVE CONTER EXATAMENTE ESTAS SEÇÕES (SEM EMOJIS):
    Formato: ### APIs e Servicos Necessarios
    Conteúdo: Listar TODAS as APIs fornecidas
    Descrição: Uso técnico baseado no contexto
+
+5.1. ESPECIFICAÇÕES DE API (nível #### - SUBSEÇÃO OBRIGATÓRIA SE especificacoes_api FORNECIDAS)
+   Formato: #### Especificacoes da API
+   CRÍTICO: Se a tag <especificacoes_api> estiver presente nos dados de entrada, VOCÊ DEVE:
+   - Criar esta subseção dentro de "APIs e Servicos Necessarios"
+   - Incluir TODOS os detalhes fornecidos em especificacoes_api:
+     * Endpoint (se fornecido)
+     * Parâmetros (se fornecido)
+     * Formato de Resposta (se fornecido) - usar bloco de código markdown para JSON
+     * Tratamento de Erros (se fornecido)
+     * Documentação (se fornecido)
+   - NÃO omitir nenhum detalhe fornecido
+   - Usar formatação markdown apropriada (código em blocos ```)
 
 6. OBJETIVOS TÉCNICOS (nível ###)
    Formato: ### Objetivos Tecnicos
@@ -310,12 +364,14 @@ ANTES DE ENTREGAR, VERIFICAR:
 [ ] Todas as 9 seções obrigatórias presentes
 [ ] TODAS as regras de negócio incluídas
 [ ] TODAS as APIs mencionadas detalhadas
+[ ] SE <especificacoes_api> presente: subseção "Especificacoes da API" incluída com TODOS os detalhes
 [ ] TODOS os objetivos incluídos
 [ ] TODOS os critérios fornecidos incluídos
 [ ] Mínimo 3 cenários de teste
 [ ] Nenhuma informação inventada
 [ ] Linguagem objetiva e técnica
 [ ] Formato Markdown correto
+[ ] Blocos de código JSON formatados com ```json
 </quality_checklist>
 
 <generation_instructions>
@@ -333,6 +389,49 @@ INSTRUÇÕES DE GERAÇÃO:
    - Seja objetiva e direta
    - Use APENAS informações fornecidas
    - Não adicione tecnologias não mencionadas
+
+3.1. ESPECIFICAÇÕES DE API (SE FORNECIDAS):
+   - Verifique se há tag <especificacoes_api> nos inputs
+   - Se presente, OBRIGATORIAMENTE criar subseção "#### Especificacoes da API"
+   - Incluir TODOS os campos fornecidos
+   - Usar blocos de código ```json para JSONs
+   - Não omitir nenhum detalhe
+
+3.2. INTERPRETAÇÃO DE MÉTODOS HTTP:
+   Ao gerar especificações de API, você DEVE interpretar os campos de acordo com o método HTTP:
+
+   **GET (Consulta de dados)**
+   - Endpoint: Rota da API
+   - Parâmetros de Consulta (Query Params): Filtros, paginação e ordenação passados na URL
+   - Exemplo: GET /api/v1/usuarios?status=ativo&limit=10&page=1
+   - NÃO possui corpo de requisição
+
+   **POST (Criação de recurso)**
+   - Endpoint: Rota da API
+   - Corpo da Requisição (Body): Objeto JSON com os dados que serão enviados para criação
+   - Exemplo: POST /api/v1/usuarios com body {{"nome": "João", "email": "joao@email.com"}}
+   - NÃO utiliza parâmetros de consulta para envio de dados
+
+   **PUT (Substituição completa de recurso)**
+   - Endpoint: Rota da API contendo o identificador do recurso
+   - Parâmetro de Rota (Path Param): Identificador do recurso a ser substituído
+   - Corpo da Requisição (Body): Objeto JSON completo que substituirá o recurso existente
+   - Exemplo: PUT /api/v1/usuarios/123 com body contendo todos os campos do recurso
+
+   **PATCH (Alteração parcial de recurso)**
+   - Endpoint: Rota da API contendo o identificador do recurso
+   - Parâmetro de Rota (Path Param): Identificador do recurso a ser alterado
+   - Corpo da Requisição (Body): Objeto JSON contendo apenas os campos que serão modificados
+   - Exemplo: PATCH /api/v1/usuarios/123 com body {{"status": "inativo"}}
+
+   **DELETE (Exclusão de recurso)**
+   - Endpoint: Rota da API contendo o identificador do recurso
+   - Parâmetro de Rota (Path Param): Identificador do recurso a ser excluído
+   - Exemplo: DELETE /api/v1/usuarios/123
+   - NÃO possui corpo de requisição
+
+   IMPORTANTE: Se o usuário fornecer informações incompatíveis (ex: body em requisição GET),
+   ignore ou adapte conforme o padrão REST apropriado para o método.
 
 4. CRITÉRIOS:
    - Derive dos critérios fornecidos
@@ -376,6 +475,32 @@ Implementar fluxo de autenticacao OAuth 2.0 utilizando Google Identity Platform.
 - Google OAuth 2.0 API: Autenticacao e autorizacao de usuarios
 - Google Identity Platform: Gerenciamento de identidades
 
+#### Especificacoes da API
+
+**Método HTTP:** POST
+
+**Endpoint:** `/api/v1/auth/google`
+
+**Corpo da Requisição (Body):**
+```json
+{{
+  "redirect_uri": "https://app.example.com/callback",
+  "state": "random_csrf_token"
+}}
+```
+
+**Formato de Resposta:**
+```json
+{{
+  "success": true,
+  "token": "jwt_token_aqui",
+  "user": {{
+    "id": "123",
+    "email": "user@example.com"
+  }}
+}}
+```
+
 ### Objetivos Tecnicos
 
 - Permitir autenticacao via conta Google
@@ -408,7 +533,7 @@ Então sistema deve exibir mensagem de erro apropriada
 
 ### Complexidade
 
-Pontos: {complexidade}
+Pontos: 5
 </output_example>
 
 <final_reminder>
@@ -420,6 +545,7 @@ CRÍTICO - LEMBRE-SE:
 4. SER OBJETIVA E DIRETA
 5. INCLUIR TODAS AS SEÇÕES OBRIGATÓRIAS
 6. INCLUIR TODAS AS REGRAS/APIs/OBJETIVOS/CRITÉRIOS FORNECIDOS
+7. **ESPECIFICAÇÕES DE API**: Se a tag <especificacoes_api> estiver presente, OBRIGATORIAMENTE incluir subseção "#### Especificacoes da API" com TODOS os detalhes fornecidos (endpoint, parâmetros, formato de resposta em ```json, tratamento de erros, documentação)
 
 Retorne APENAS o Markdown da história, sem texto adicional antes ou depois.
 </final_reminder>
